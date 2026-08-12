@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MASK | PAP Adherence Data Collection</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --sky:        #0284c7;
+      --sky-dark:   #0c4a6e;
+      --sky-pale:   #f0f9ff;
+      --sky-light:  #e0f2fe;
+      --purple:     #7c3aed;
+      --purple-pale:#f5f3ff;
+      --teal:       #0891b2;
+      --teal-pale:  #ecfeff;
+      --green:      #059669;
+      --green-pale: #ecfdf5;
+      --amber:      #d97706;
+      --amber-pale: #fffbeb;
+      --rose:       #e11d48;
+      --rose-pale:  #fff1f2;
+      --bg:         #f8fafc;
+      --surface:    #ffffff;
+      --border:     #e2e8f0;
+      --text:       #0f172a;
+      --muted:      #64748b;
+      --label:      #475569;
+      --coral:      #dc2626;
+      --font-body:  'DM Sans', system-ui, sans-serif;
+      --font-head:  'DM Serif Display', Georgia, serif;
+      --radius:     12px;
+      --shadow:     0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.05);
+      --trans:      180ms ease;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{font-size:16px}
+    body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+
+    /* ── Header ── */
+    .app-header{background:linear-gradient(135deg,var(--sky-dark),var(--sky));padding:14px 20px 0;flex-shrink:0;position:sticky;top:0;z-index:50}
+    .header-top{max-width:700px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .header-title-wrap{display:flex;flex-direction:column;gap:2px}
+    .header-eyebrow{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.55)}
+    .header-title{font-family:var(--font-head);font-size:17px;color:#fff;font-weight:400;line-height:1.2}
+    .header-title em{font-style:italic;color:#bae6fd}
+    .step-counter{font-size:12px;color:rgba(255,255,255,.65);font-weight:500;white-space:nowrap}
+    .step-counter strong{color:#fff}
+
+    /* ── Step bar ── */
+    .step-bar{max-width:700px;margin:0 auto;display:flex;gap:3px}
+    .step-seg{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;padding-bottom:10px;cursor:default}
+    .step-seg-bar{width:100%;height:3px;background:rgba(255,255,255,.2);border-radius:2px;transition:background .3s ease}
+    .step-seg.done   .step-seg-bar{background:#7dd3fc}
+    .step-seg.active .step-seg-bar{background:#fff}
+    .step-seg-label{font-size:8.5px;letter-spacing:.04em;text-transform:uppercase;color:rgba(255,255,255,.3);transition:color .3s ease;font-weight:500;white-space:nowrap}
+    .step-seg.done   .step-seg-label{color:#7dd3fc}
+    .step-seg.active .step-seg-label{color:#fff}
+
+    /* ── Content ── */
+    .content-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:22px 16px 100px}
+    .screen-wrap{max-width:700px;margin:0 auto}
+    .screen{display:none}
+    .screen.active{display:block;animation:slideIn .22s ease}
+    .screen.back{display:block;animation:slideInBack .22s ease}
+    @keyframes slideIn    {from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+    @keyframes slideInBack{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:none}}
+
+    /* ── Section card ── */
+    .section-card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:14px}
+    .section-head{display:flex;align-items:center;gap:14px;padding:16px 20px 14px;border-bottom:1px solid var(--border)}
+    .section-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+    .icon-sky   {background:var(--sky-pale);  color:var(--sky)}
+    .icon-purple{background:var(--purple-pale);color:var(--purple)}
+    .icon-teal  {background:var(--teal-pale);  color:var(--teal)}
+    .icon-green {background:var(--green-pale); color:var(--green)}
+    .icon-amber {background:var(--amber-pale); color:var(--amber)}
+    .icon-rose  {background:var(--rose-pale);  color:var(--rose)}
+    .section-head h2{font-family:var(--font-head);font-size:16px;color:var(--sky-dark);font-weight:400;line-height:1.3}
+    .section-head p{font-size:12px;color:var(--muted);margin-top:2px}
+    .section-body{padding:20px 20px 16px}
+
+    /* ── Field grid ── */
+    .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 20px}
+    .field-grid.three{grid-template-columns:1fr 1fr 1fr}
+    .field-grid.single{grid-template-columns:1fr}
+    @media(max-width:520px){.field-grid,.field-grid.three{grid-template-columns:1fr}}
+    .span-2{grid-column:span 2}
+    .span-3{grid-column:span 3}
+    @media(max-width:520px){.span-2,.span-3{grid-column:span 1}}
+    .field-divider{grid-column:1/-1;height:1px;background:var(--border);margin:4px 0}
+    .field-section-label{grid-column:1/-1;font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--sky);padding-top:2px}
+
+    /* ── Field ── */
+    .field{display:flex;flex-direction:column;gap:5px}
+    .field label{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--label)}
+    .field label .unit{font-weight:400;color:var(--muted);font-size:10px;text-transform:none;letter-spacing:0;margin-left:3px}
+    .field-hint{font-size:11px;color:var(--muted);margin-top:-2px}
+    .calc-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;color:var(--sky);font-family:var(--font-body);background:var(--sky-pale);padding:2px 7px;border-radius:4px;margin-top:3px}
+
+    /* ── Inputs ── */
+    input[type=text],input[type=number],input[type=date],input[type=time],select,textarea{
+      width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;
+      font-family:var(--font-body);font-size:14px;color:var(--text);background:var(--bg);
+      transition:border-color var(--trans),box-shadow var(--trans);appearance:none;-webkit-appearance:none
+    }
+    input:focus,select:focus,textarea:focus{outline:none;border-color:var(--sky);background:#fff;box-shadow:0 0 0 3px rgba(2,132,199,.12)}
+    input.err,select.err{border-color:var(--coral);background:#fff5f5}
+    textarea{resize:vertical;min-height:72px}
+    select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+    input[type=number]{font-family:'DM Sans',monospace}
+
+    /* ── Toggle (Yes/No) ── */
+    .toggle-group{display:flex;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;background:var(--bg)}
+    .toggle-group input[type=radio]{display:none}
+    .toggle-group label{flex:1;text-align:center;padding:8px 10px;font-size:13px;font-weight:500;cursor:pointer;transition:var(--trans);color:var(--muted);border-right:1px solid var(--border)}
+    .toggle-group label:last-of-type{border-right:none}
+    .toggle-group input:checked + label{background:var(--sky);color:#fff;border-color:var(--sky)}
+
+    /* ── Claustrophobia scale ── */
+    .claustro-scale{display:flex;gap:4px}
+    .claustro-scale input[type=radio]{display:none}
+    .claustro-scale label{flex:1;padding:8px 3px;text-align:center;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);transition:var(--trans);background:#fff}
+    .claustro-scale input:checked+label{background:var(--purple);border-color:var(--purple);color:#fff}
+    .claustro-scale label:hover{border-color:var(--purple);color:var(--purple)}
+    .scale-endpoints{display:flex;justify-content:space-between;margin-top:6px;font-size:10.5px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+
+    /* ── Error ── */
+    .err-msg{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;font-size:13px;color:var(--coral);margin-top:12px;display:none}
+    .err-msg.show{display:block}
+
+    /* ── Summary (Review) ── */
+    .review-section{margin-bottom:18px}
+    .review-section h3{font-family:var(--font-head);font-size:15px;font-weight:400;color:var(--sky-dark);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+    .review-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 20px}
+    @media(max-width:420px){.review-grid{grid-template-columns:1fr}}
+    .review-item{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:13px}
+    .review-item .rl{color:var(--muted);font-size:11px;flex-shrink:0}
+    .review-item .rv{font-weight:500;text-align:right}
+    .review-item .rv.empty{color:#cbd5e1;font-weight:400;font-style:italic}
+
+    /* ── Nav bar ── */
+    .nav-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-top:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:100}
+    .nav-hint{font-size:12px;color:var(--muted)}
+    .nav-btns{display:flex;gap:9px}
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:50px;font-family:var(--font-body);font-size:14px;font-weight:600;cursor:pointer;transition:var(--trans);border:none}
+    .btn-back{background:var(--bg);color:var(--muted);border:1.5px solid var(--border)}
+    .btn-back:hover{background:#e2e8f0;color:var(--text)}
+    .btn-next{background:var(--sky);color:#fff;box-shadow:0 3px 10px rgba(2,132,199,.25)}
+    .btn-next:hover{background:var(--sky-dark)}
+    .btn-submit{background:var(--green);color:#fff;box-shadow:0 3px 10px rgba(5,150,105,.25)}
+    .btn-submit:hover{background:#047857}
+    .btn svg{width:15px;height:15px;flex-shrink:0}
+    .spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* ── Success ── */
+    #successScreen{display:none}
+    #successScreen.show{display:block}
+    .success-wrap{max-width:700px;margin:0 auto;padding:56px 20px 80px;display:flex;flex-direction:column;align-items:center;text-align:center}
+    .success-icon{width:80px;height:80px;background:var(--green-pale);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:22px;animation:pop .4s cubic-bezier(.34,1.56,.64,1)}
+    @keyframes pop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+    .success-wrap h2{font-family:var(--font-head);font-size:26px;color:var(--sky-dark);margin-bottom:10px;font-weight:400}
+    .success-wrap p{font-size:14.5px;color:var(--muted);line-height:1.7;max-width:380px}
+    .success-meta{margin-top:20px;font-size:13px;color:var(--sky);background:var(--sky-pale);padding:10px 20px;border-radius:8px}
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="app-header" id="appHeader">
+  <div class="header-top">
+    <div class="header-title-wrap">
+      <div class="header-eyebrow">PAP Adherence · Mask Selection &amp; Compliance</div>
+      <div class="header-title">MASK <em>Data Collection</em></div>
+    </div>
+    <div class="step-counter" id="stepCounter"><strong>1</strong> of 9</div>
+  </div>
+  <div class="step-bar" id="stepBar">
+    <div class="step-seg active"><div class="step-seg-bar"></div><div class="step-seg-label">Patient</div></div>
+    <div class="step-seg"><div class="step-seg-bar"></div><div class="step-seg-label">PSG</div></div>
+    <div class="step-seg"><div class="step-seg-bar"></div><div class="step-seg-label">Comorbid.</div></div>
+    <div class="step-seg"><div class="step-seg-bar"></div><div class="step-seg-label">Measure.</div></div>
+    <div class="step-seg"><div class="step-seg-bar"></div><div class="step-seg-label">Behaviour</div></div>
+    <div class="step-seg"><div class="step-seg-bar"></div><div class="step-seg-label">Fitting</div></div>
+    <div class="step-seg"><div class="step-seg-bar"></div><div class="step-seg-label">Final Mask</div></div>
+    <div class="step-seg"><div class="step-seg-bar"></div><div class="step-seg-label">Follow-up</div></div>
+    <div class="step-seg"><div class="step-seg-bar"></div><div class="step-seg-label">Review</div></div>
+  </div>
+</header>
+
+<!-- Content -->
+<div class="content-area" id="contentArea">
+<div class="screen-wrap">
+
+<!-- ═══ Screen 0: Patient Info ═══════════════════════════════ -->
+<div class="screen active" id="screen-0">
+  <div class="section-card">
+    <div class="section-head">
+      <div class="section-icon icon-sky">🪪</div>
+      <div><h2>Patient Information</h2><p>Identifiers, demographics, and enrollment details</p></div>
+    </div>
+    <div class="section-body">
+      <div class="field-grid">
+        <div class="field span-2">
+          <label>Patient ID <span class="unit">(auto-generated)</span></label>
+          <div style="display:flex;align-items:center;justify-content:space-between;background:var(--sky-pale);border:1.5px solid #bae6fd;border-radius:8px;padding:10px 16px;gap:16px">
+            <div>
+              <div style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--sky);font-weight:600;margin-bottom:3px">Generated ID</div>
+              <div style="font-family:'DM Sans',monospace;font-size:22px;letter-spacing:.12em;color:var(--sky-dark);font-weight:600" id="patientIdDisplay">—</div>
+            </div>
+            <button class="btn-copy" onclick="navigator.clipboard.writeText(generatedPatientId)" style="background:none;border:1px solid var(--sky);color:var(--sky);font-size:11px;padding:4px 10px;border-radius:4px;cursor:pointer;font-family:var(--font-body);font-weight:500">Copy</button>
+          </div>
+        </div>
+        <div class="field"><label>Name / Initials</label><input type="text" id="name_initials" placeholder="e.g. J.S." /></div>
+        <div class="field"><label>Enrollment Date</label><input type="date" id="enrollment_date" /></div>
+        <div class="field"><label>Age <span class="unit">(years)</span></label><input type="number" id="age" placeholder="—" min="18" max="100" /></div>
+        <div class="field"><label>Sex</label>
+          <select id="sex"><option value="">— Select —</option><option>Male</option><option>Female</option><option>Other / Not disclosed</option></select>
+        </div>
+        <div class="field"><label>BMI <span class="unit">(kg/m²)</span></label><input type="number" id="bmi" placeholder="—" min="15" max="70" step="0.1" /></div>
+      </div>
+    </div>
+  </div>
+  <div class="err-msg" id="err-0">⚠️ Please fill in Patient ID and Enrollment Date before continuing.</div>
+</div>
+
+<!-- ═══ Screen 1: PSG / Screening ════════════════════════════ -->
+<div class="screen" id="screen-1">
+  <div class="section-card">
+    <div class="section-head">
+      <div class="section-icon icon-purple">📈</div>
+      <div><h2>Baseline PSG &amp; Screening</h2><p>Polysomnography results and clinical scores</p></div>
+    </div>
+    <div class="section-body">
+      <div class="field-grid three">
+        <div class="field"><label>PSG AHI <span class="unit">(events/hr)</span></label><input type="number" id="psg_ahi" placeholder="—" min="0" max="200" step="0.1" /></div>
+        <div class="field"><label>PSG ODI <span class="unit">(events/hr)</span></label><input type="number" id="psg_odi" placeholder="—" min="0" max="200" step="0.1" /></div>
+        <div class="field"><label>LSAT <span class="unit">(%)</span></label><input type="number" id="lsat_pct" placeholder="—" min="0" max="100" step="0.1" /><span class="field-hint">Lowest SpO₂ during sleep</span></div>
+        <div class="field"><label>T90 <span class="unit">(hours)</span></label><input type="number" id="t90_hours" placeholder="—" min="0" step="0.1" /><span class="field-hint">Time SpO₂ &lt;90%</span></div>
+        <div class="field"><label>STOP-BANG <span class="unit">(0–8)</span></label>
+          <select id="stopbang"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option></select>
+        </div>
+        <div class="field"><label>ESS Score <span class="unit">(0–24)</span></label><input type="number" id="ess_baseline" placeholder="—" min="0" max="24" /></div>
+      </div>
+    </div>
+  </div>
+  <div class="err-msg" id="err-1"></div>
+</div>
+
+<!-- ═══ Screen 2: Comorbidities & Nasal Status ═══════════════ -->
+<div class="screen" id="screen-2">
+  <div class="section-card">
+    <div class="section-head">
+      <div class="section-icon icon-teal">🩺</div>
+      <div><h2>Comorbidities &amp; Nasal Status</h2><p>Relevant conditions and anatomical factors affecting mask fit</p></div>
+    </div>
+    <div class="section-body">
+      <div class="field-grid single">
+        <div class="field"><label>Comorbidities</label><textarea id="comorbidities" placeholder="List active comorbidities (e.g. Hypertension, T2DM, GERD)…"></textarea></div>
+        <div class="field-divider"></div>
+        <div class="field-section-label">Nasal &amp; Facial Status</div>
+      </div>
+      <div class="field-grid">
+        <div class="field"><label>Nasal Septal Deviation?</label>
+          <div class="toggle-group"><input type="radio" name="nasal_septal" id="ns_y" value="Yes"><label for="ns_y">Yes</label><input type="radio" name="nasal_septal" id="ns_n" value="No"><label for="ns_n">No</label><input type="radio" name="nasal_septal" id="ns_uk" value="Unknown"><label for="ns_uk">Unknown</label></div>
+        </div>
+        <div class="field"><label>Allergic Rhinitis?</label>
+          <div class="toggle-group"><input type="radio" name="allergic_rhinitis" id="ar_y" value="Yes"><label for="ar_y">Yes</label><input type="radio" name="allergic_rhinitis" id="ar_n" value="No"><label for="ar_n">No</label><input type="radio" name="allergic_rhinitis" id="ar_uk" value="Unknown"><label for="ar_uk">Unknown</label></div>
+        </div>
+        <div class="field"><label>Facial Hair Status</label>
+          <select id="facial_hair"><option value="">— Select —</option><option>None</option><option>Stubble</option><option>Moustache</option><option>Full Beard</option><option>Goatee</option></select>
+        </div>
+        <div class="field"><label>Dentition Status</label>
+          <select id="dentition"><option value="">— Select —</option><option>Full natural dentition</option><option>Partial dentures</option><option>Full dentures</option><option>Edentulous (no dentures)</option><option>Dental implants</option><option>Other</option></select>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="err-msg" id="err-2"></div>
+</div>
+
+<!-- ═══ Screen 3: Craniofacial Measurements ══════════════════ -->
+<div class="screen" id="screen-3">
+  <div class="section-card">
+    <div class="section-head">
+      <div class="section-icon icon-amber">📏</div>
+      <div><h2>Craniofacial Anthropometry</h2><p>All measurements in millimetres (mm)</p></div>
+    </div>
+    <div class="section-body">
+      <div class="field-grid three">
+        <div class="field">
+          <label>Face Width <span class="unit">Bizygomatic (mm)</span></label>
+          <input type="number" id="face_width" placeholder="—" min="80" max="180" step="0.1" />
+        </div>
+        <div class="field">
+          <label>Face Length <span class="unit">Nasion–Menton (mm)</span></label>
+          <input type="number" id="face_length" placeholder="—" min="80" max="160" step="0.1" />
+        </div>
+        <div class="field">
+          <label>Nasal Bridge Width <span class="unit">(mm)</span></label>
+          <input type="number" id="nasal_bridge_width" placeholder="—" min="5" max="40" step="0.1" />
+        </div>
+        <div class="field">
+          <label>Nasal Alar Width <span class="unit">(mm)</span></label>
+          <input type="number" id="nasal_alar_width" placeholder="—" min="20" max="60" step="0.1" />
+        </div>
+        <div class="field">
+          <label>Nasal Depth <span class="unit">(mm)</span></label>
+          <input type="number" id="nasal_depth" placeholder="—" min="10" max="50" step="0.1" />
+        </div>
+        <div class="field">
+          <label>Mouth Width <span class="unit">(mm)</span></label>
+          <input type="number" id="mouth_width" placeholder="—" min="30" max="80" step="0.1" />
+        </div>
+        <div class="field">
+          <label>Interpupillary Distance <span class="unit">(mm)</span></label>
+          <input type="number" id="interpupillary" placeholder="—" min="45" max="80" step="0.1" />
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="err-msg" id="err-3"></div>
+</div>
+
+<!-- ═══ Screen 4: Behavioural Assessment ═════════════════════ -->
+<div class="screen" id="screen-4">
+  <div class="section-card">
+    <div class="section-head">
+      <div class="section-icon icon-green">📋</div>
+      <div><h2>Behavioural &amp; Anatomic Assessment</h2><p>Patient-reported factors influencing mask selection</p></div>
+    </div>
+    <div class="section-body">
+      <div class="field-grid">
+        <div class="field"><label>Wears Glasses in Bed?</label>
+          <div class="toggle-group"><input type="radio" name="glasses_bed" id="gb_y" value="Yes"><label for="gb_y">Yes</label><input type="radio" name="glasses_bed" id="gb_n" value="No"><label for="gb_n">No</label></div>
+        </div>
+        <div class="field"><label>Sensitive Nostrils?</label>
+          <div class="toggle-group"><input type="radio" name="sensitive_nostrils" id="sn_y" value="Yes"><label for="sn_y">Yes</label><input type="radio" name="sensitive_nostrils" id="sn_n" value="No"><label for="sn_n">No</label></div>
+        </div>
+        <div class="field"><label>Tosses &amp; Turns at Night?</label>
+          <div class="toggle-group"><input type="radio" name="tosses_turns" id="tt_y" value="Yes"><label for="tt_y">Yes</label><input type="radio" name="tosses_turns" id="tt_n" value="No"><label for="tt_n">No</label></div>
+        </div>
+        <div class="field"><label>Preferred Sleep Position</label>
+          <select id="sleep_position"><option value="">— Select —</option><option>Supine</option><option>Left lateral</option><option>Right lateral</option><option>Prone</option><option>Variable</option></select>
+        </div>
+        <div class="field"><label>Hand Grasping Difficulty?</label>
+          <div class="toggle-group"><input type="radio" name="hand_grasping" id="hg_y" value="Yes"><label for="hg_y">Yes</label><input type="radio" name="hand_grasping" id="hg_n" value="No"><label for="hg_n">No</label></div>
+        </div>
+        <div class="field"><label>Frequent Nasal Congestion?</label>
+          <div class="toggle-group"><input type="radio" name="nasal_congestion" id="nc_y" value="Yes"><label for="nc_y">Yes</label><input type="radio" name="nasal_congestion" id="nc_n" value="No"><label for="nc_n">No</label></div>
+        </div>
+        <div class="field"><label>Bed Partner Present?</label>
+          <div class="toggle-group"><input type="radio" name="bed_partner" id="bp_y" value="Yes"><label for="bp_y">Yes</label><input type="radio" name="bed_partner" id="bp_n" value="No"><label for="bp_n">No</label></div>
+        </div>
+        <div class="field-divider"></div>
+        <div class="field-section-label">Claustrophobia Severity</div>
+        <div class="field span-2">
+          <label>Rate claustrophobia severity <span class="unit">(0 = none, 10 = severe)</span></label>
+          <div class="claustro-scale" id="claustro-scale"></div>
+          <div class="scale-endpoints"><span>0 — None</span><span>10 — Severe</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="err-msg" id="err-4"></div>
+</div>
+
+<!-- ═══ Screen 5: Mask Fitting & AI ══════════════════════════ -->
+<div class="screen" id="screen-5">
+  <div class="section-card">
+    <div class="section-head">
+      <div class="section-icon icon-sky">🤖</div>
+      <div><h2>AI-Guided Mask Fitting</h2><p>MyMask AI recommendation and fitting procedure details</p></div>
+    </div>
+    <div class="section-body">
+      <div class="field-grid">
+        <div class="field-section-label">MyMask AI</div>
+        <div class="field"><label>MyMask AI Used?</label>
+          <div class="toggle-group"><input type="radio" name="ai_used" id="ai_y" value="Yes"><label for="ai_y">Yes</label><input type="radio" name="ai_used" id="ai_n" value="No"><label for="ai_n">No</label></div>
+        </div>
+        <div class="field"><label>AI Recommended Mask Type</label>
+          <select id="ai_recommended"><option value="">— Select —</option><option>Full Face / Oronasal</option><option>Nasal</option><option>Nasal Pillow</option><option>Oral</option><option>Hybrid</option><option>N/A (AI not used)</option></select>
+        </div>
+        <div class="field-divider"></div>
+        <div class="field-section-label">Fitting Procedure</div>
+        <div class="field"><label>No. of Masks Tried</label><input type="number" id="num_masks_tried" placeholder="—" min="1" max="20" /></div>
+        <div class="field"><label>Fitting Position</label>
+          <select id="fitting_position"><option value="">— Select —</option><option>Supine</option><option>Semi-recumbent</option><option>Seated upright</option></select>
+        </div>
+        <div class="field"><label>Total Fitting Time <span class="unit">(min)</span></label><input type="number" id="fitting_time" placeholder="—" min="1" max="120" /></div>
+        <div class="field"><label>Pressure Trial During Fitting?</label>
+          <div class="toggle-group"><input type="radio" name="pressure_trial" id="pt_y" value="Yes"><label for="pt_y">Yes</label><input type="radio" name="pressure_trial" id="pt_n" value="No"><label for="pt_n">No</label></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="err-msg" id="err-5"></div>
+</div>
+
+<!-- ═══ Screen 6: Final Mask & Device ════════════════════════ -->
+<div class="screen" id="screen-6">
+  <div class="section-card">
+    <div class="section-head">
+      <div class="section-icon icon-purple">😷</div>
+      <div><h2>Patient Comfort &amp; Final Mask Selection</h2><p>Patient-reported preference and prescribed equipment</p></div>
+    </div>
+    <div class="section-body">
+      <div class="field-grid">
+        <div class="field-section-label">Patient-Reported Comfort</div>
+        <div class="field"><label>Most Comfortable Mask Type (Patient)</label>
+          <select id="patient_comfortable_type"><option value="">— Select —</option><option>Full Face / Oronasal</option><option>Nasal</option><option>Nasal Pillow</option><option>Oral</option><option>Hybrid</option></select>
+        </div>
+        <div class="field"><label>AI &amp; Patient Comfort Concordant?</label>
+          <div class="toggle-group"><input type="radio" name="ai_concordant" id="ac_y" value="Yes"><label for="ac_y">Yes</label><input type="radio" name="ai_concordant" id="ac_n" value="No"><label for="ac_n">No</label><input type="radio" name="ai_concordant" id="ac_na" value="N/A"><label for="ac_na">N/A</label></div>
+        </div>
+        <div class="field-divider"></div>
+        <div class="field-section-label">Prescribed Mask</div>
+        <div class="field span-2"><label>Final Mask Brand &amp; Model</label><input type="text" id="final_mask_brand" placeholder="e.g. ResMed AirFit F20 Medium" /></div>
+        <div class="field"><label>Final Mask Type</label>
+          <select id="final_mask_type"><option value="">— Select —</option><option>Full Face / Oronasal</option><option>Nasal</option><option>Nasal Pillow</option><option>Oral</option><option>Hybrid</option></select>
+        </div>
+        <div class="field"><label>Cushion Material</label>
+          <select id="cushion_material"><option value="">— Select —</option><option>Silicone</option><option>Gel</option><option>Foam</option><option>Fabric / Cloth</option><option>Hybrid</option></select>
+        </div>
+        <div class="field"><label>Headgear Type</label>
+          <select id="headgear_type"><option value="">— Select —</option><option>Standard 4-point</option><option>Minimal-contact</option><option>Top-of-head</option><option>Magnetic clip</option><option>Other</option></select>
+        </div>
+        <div class="field-divider"></div>
+        <div class="field-section-label">PAP Device &amp; Humidification</div>
+        <div class="field"><label>Device Model</label><input type="text" id="device_model" placeholder="e.g. ResMed AirSense 11 AutoSet" /></div>
+        <div class="field"><label>Humidification Type</label>
+          <select id="humidification"><option value="">— Select —</option><option>None</option><option>Passover (cold)</option><option>Heated humidifier</option><option>Integrated heated humidifier</option></select>
+        </div>
+        <div class="field"><label>Heated Tube Used?</label>
+          <div class="toggle-group"><input type="radio" name="heated_tube" id="ht_y" value="Yes"><label for="ht_y">Yes</label><input type="radio" name="heated_tube" id="ht_n" value="No"><label for="ht_n">No</label></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="err-msg" id="err-6"></div>
+</div>
+
+<!-- ═══ Screen 7: Follow-up ═══════════════════════════════════ -->
+<div class="screen" id="screen-7">
+  <div class="section-card">
+    <div class="section-head">
+      <div class="section-icon icon-rose">📅</div>
+      <div><h2>Follow-up — 1 Week</h2><p>Objective compliance data collected after one week of PAP use</p></div>
+    </div>
+    <div class="section-body">
+      <div class="field-grid">
+        <div class="field"><label>Mask Changed Since Fitting?</label>
+          <div class="toggle-group"><input type="radio" name="mask_changed" id="mc_y" value="Yes"><label for="mc_y">Yes</label><input type="radio" name="mask_changed" id="mc_n" value="No"><label for="mc_n">No</label></div>
+        </div>
+        <div class="field"><label>Average CPAP Usage <span class="unit">(hrs/night)</span></label>
+          <input type="number" id="avg_usage" placeholder="—" min="0" max="24" step="0.1" />
+        </div>
+        <div class="field"><label>Mask Leak <span class="unit">95th percentile (L/min)</span></label>
+          <input type="number" id="mask_leak" placeholder="—" min="0" max="100" step="0.1" />
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="err-msg" id="err-7"></div>
+</div>
+
+<!-- ═══ Screen 8: Review ══════════════════════════════════════ -->
+<div class="screen" id="screen-8">
+  <div class="section-card">
+    <div class="section-head">
+      <div class="section-icon icon-green">✅</div>
+      <div><h2>Review &amp; Submit</h2><p>Verify all entries before submitting to the <strong>MASK Data</strong> tab</p></div>
+    </div>
+    <div class="section-body">
+      <div id="reviewContent"></div>
+    </div>
+  </div>
+  <div class="err-msg" id="err-8"></div>
+</div>
+
+</div><!-- /screen-wrap -->
+</div><!-- /content-area -->
+
+<!-- Success -->
+<div id="successScreen">
+  <div class="success-wrap">
+    <div class="success-icon">✓</div>
+    <h2>Record Submitted</h2>
+    <p>PAP adherence data has been sent to the study spreadsheet.</p>
+    <div class="success-meta" id="successMeta"></div>
+    <div style="display:flex;gap:10px;margin-top:24px;flex-wrap:wrap;justify-content:center">
+      <button class="btn btn-next" onclick="resetForm()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 4V1L8 5l4 4V6a6 6 0 110 12 6 6 0 01-5.2-3"/></svg>New Record
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Nav -->
+<nav class="nav-bar" id="navBar">
+  <div class="nav-hint" id="navHint"></div>
+  <div class="nav-btns">
+    <button class="btn btn-back" id="btnBack" onclick="prevScreen()" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>Back
+    </button>
+    <button class="btn btn-next" id="btnNext" onclick="nextScreen()">
+      Next<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+    <button class="btn btn-submit" id="btnSubmit" style="display:none" onclick="submitForm()">
+      <span id="submitLabel">Submit to Sheet</span>
+      <div class="spinner" id="submitSpinner" style="display:none"></div>
+    </button>
+  </div>
+</nav>
+
+<script src="config.js"></script>
+<script>
+/* ── Patient ID generation ── */
+let generatedPatientId = '';
+
+async function generatePatientId() {
+  for (let i = 0; i < 5; i++) {
+    const id = String(Math.floor(Math.random() * 90000000) + 10000000);
+    try {
+      const r = await fetch(`${SCRIPT_URL}?action=collision&patient_id=${id}&_nc=${Date.now()}`);
+      const d = await r.json();
+      if (!d.collision) return id;
+    } catch { return id; }
+  }
+  return String(Math.floor(Math.random() * 90000000) + 10000000);
+}
+
+/* ── State ── */
+let currentScreen = 0;
+const TOTAL = 9;
+const HINTS = [
+  'Patient ID and demographic details',
+  'PSG AHI, ODI, LSAT, T90, STOP-BANG, ESS',
+  'Comorbidities and nasal/facial status',
+  'Craniofacial measurements in mm',
+  'Behavioural and anatomical factors',
+  'AI recommendation and fitting procedure',
+  'Patient comfort preference and prescribed equipment',
+  'One-week follow-up compliance data',
+  'Verify entries before submitting'
+];
+
+/* ── Build claustrophobia 0–10 scale ── */
+document.getElementById('claustro-scale').innerHTML =
+  Array.from({length:11},(_,i)=>
+    `<input type="radio" name="claustro" id="cl_${i}" value="${i}">
+     <label for="cl_${i}">${i}</label>`).join('');
+
+/* ── Step bar update ── */
+function updateNav() {
+  document.querySelectorAll('.step-seg').forEach((el,i)=>{
+    el.classList.remove('active','done');
+    if(i===currentScreen) el.classList.add('active');
+    else if(i<currentScreen) el.classList.add('done');
+  });
+  document.getElementById('stepCounter').innerHTML=`<strong>${currentScreen+1}</strong> of ${TOTAL}`;
+  document.getElementById('navHint').textContent=HINTS[currentScreen];
+  document.getElementById('btnBack').style.display=currentScreen===0?'none':'';
+  document.getElementById('btnNext').style.display=currentScreen===TOTAL-1?'none':'';
+  document.getElementById('btnSubmit').style.display=currentScreen===TOTAL-1?'':'none';
+  if(currentScreen===TOTAL-1) buildReview();
+}
+
+/* ── Screen transitions ── */
+function showScreen(idx, dir) {
+  document.getElementById(`screen-${currentScreen}`).className='screen';
+  currentScreen=idx;
+  document.getElementById(`screen-${currentScreen}`).className=`screen ${dir==='back'?'back':'active'}`;
+  updateNav();
+  document.getElementById('contentArea').scrollTop=0;
+}
+
+/* ── Helpers ── */
+const gv=id=>document.getElementById(id)?.value?.trim()??'';
+const gr=name=>document.querySelector(`input[name="${name}"]:checked`)?.value??'';
+
+/* ── Validation per screen ── */
+function validate(s) {
+  if(s===0) {
+    if(!generatedPatientId||!gv('enrollment_date')) {
+      document.getElementById('err-0').classList.add('show'); return false;
+    }
+    document.getElementById('err-0').classList.remove('show');
+  }
+  // Other screens: no hard required fields (all are useful but optional)
+  return true;
+}
+
+function nextScreen() { if(!validate(currentScreen)) return; if(currentScreen<TOTAL-1) showScreen(currentScreen+1,'forward'); }
+function prevScreen() { if(currentScreen>0) showScreen(currentScreen-1,'back'); }
+
+/* ── Data collection ── */
+function collectData() {
+  return {
+    timestamp:             new Date().toISOString(),
+    patient_id:            generatedPatientId,
+    name_initials:         gv('name_initials'),
+    enrollment_date:       gv('enrollment_date'),
+    age:                   gv('age'),
+    sex:                   gv('sex'),
+    bmi:                   gv('bmi'),
+    psg_ahi:               gv('psg_ahi'),
+    psg_odi:               gv('psg_odi'),
+    lsat_pct:              gv('lsat_pct'),
+    t90_hours:             gv('t90_hours'),
+    stopbang:              gv('stopbang'),
+    ess_baseline:          gv('ess_baseline'),
+    comorbidities:         gv('comorbidities'),
+    nasal_septal_deviation:gr('nasal_septal'),
+    allergic_rhinitis:     gr('allergic_rhinitis'),
+    facial_hair:           gv('facial_hair'),
+    dentition:             gv('dentition'),
+    face_width_mm:         gv('face_width'),
+    face_length_mm:        gv('face_length'),
+    nasal_bridge_width_mm: gv('nasal_bridge_width'),
+    nasal_alar_width_mm:   gv('nasal_alar_width'),
+    nasal_depth_mm:        gv('nasal_depth'),
+    mouth_width_mm:        gv('mouth_width'),
+    interpupillary_mm:     gv('interpupillary'),
+    wears_glasses_bed:     gr('glasses_bed'),
+    sensitive_nostrils:    gr('sensitive_nostrils'),
+    tosses_turns:          gr('tosses_turns'),
+    claustrophobia_0_10:   gr('claustro'),
+    sleep_position:        gv('sleep_position'),
+    hand_grasping:         gr('hand_grasping'),
+    nasal_congestion:      gr('nasal_congestion'),
+    bed_partner:           gr('bed_partner'),
+    ai_used:               gr('ai_used'),
+    ai_recommended_type:   gv('ai_recommended'),
+    num_masks_tried:       gv('num_masks_tried'),
+    fitting_position:      gv('fitting_position'),
+    fitting_time_min:      gv('fitting_time'),
+    pressure_trial:        gr('pressure_trial'),
+    patient_comfortable_type: gv('patient_comfortable_type'),
+    ai_concordant:         gr('ai_concordant'),
+    final_mask_brand_model:gv('final_mask_brand'),
+    final_mask_type:       gv('final_mask_type'),
+    cushion_material:      gv('cushion_material'),
+    headgear_type:         gv('headgear_type'),
+    device_model:          gv('device_model'),
+    humidification:        gv('humidification'),
+    heated_tube:           gr('heated_tube'),
+    mask_changed:          gr('mask_changed'),
+    avg_usage_hrs:         gv('avg_usage'),
+    mask_leak_95th:        gv('mask_leak'),
+  };
+}
+
+/* ── Review builder ── */
+function rv(label, val) {
+  const empty=!val;
+  return `<div class="review-item"><span class="rl">${label}</span><span class="rv${empty?' empty':''}">${val||'—'}</span></div>`;
+}
+function sec(title, rows) {
+  return `<div class="review-section"><h3>${title}</h3><div class="review-grid">${rows.join('')}</div></div>`;
+}
+
+function buildReview() {
+  const d=collectData();
+  document.getElementById('reviewContent').innerHTML = [
+    sec('🪪 Patient Info',[rv('Patient ID',d.patient_id),rv('Name/Initials',d.name_initials),rv('Enrollment Date',d.enrollment_date),rv('Age',d.age),rv('Sex',d.sex),rv('BMI',d.bmi)]),
+    sec('📈 PSG & Screening',[rv('AHI',d.psg_ahi),rv('ODI',d.psg_odi),rv('LSAT (%)',d.lsat_pct),rv('T90 (hrs)',d.t90_hours),rv('STOP-BANG',d.stopbang),rv('ESS',d.ess_baseline)]),
+    sec('🩺 Comorbidities & Nasal',[rv('Comorbidities',d.comorbidities),rv('Septal Deviation',d.nasal_septal_deviation),rv('Allergic Rhinitis',d.allergic_rhinitis),rv('Facial Hair',d.facial_hair),rv('Dentition',d.dentition)]),
+    sec('📏 Craniofacial (mm)',[rv('Face Width',d.face_width_mm),rv('Face Length',d.face_length_mm),rv('Nasal Bridge W.',d.nasal_bridge_width_mm),rv('Alar Width',d.nasal_alar_width_mm),rv('Nasal Depth',d.nasal_depth_mm),rv('Mouth Width',d.mouth_width_mm),rv('Interpupillary',d.interpupillary_mm)]),
+    sec('📋 Behavioural',[rv('Glasses in Bed',d.wears_glasses_bed),rv('Sensitive Nostrils',d.sensitive_nostrils),rv('Tosses & Turns',d.tosses_turns),rv('Claustrophobia',d.claustrophobia_0_10),rv('Sleep Position',d.sleep_position),rv('Nasal Congestion',d.nasal_congestion),rv('Bed Partner',d.bed_partner)]),
+    sec('🤖 Fitting',[rv('AI Used',d.ai_used),rv('AI Recommendation',d.ai_recommended_type),rv('Masks Tried',d.num_masks_tried),rv('Fitting Position',d.fitting_position),rv('Fitting Time (min)',d.fitting_time_min),rv('Pressure Trial',d.pressure_trial)]),
+    sec('😷 Final Mask & Device',[rv('Patient Comfort Type',d.patient_comfortable_type),rv('AI Concordant',d.ai_concordant),rv('Mask Brand/Model',d.final_mask_brand_model),rv('Mask Type',d.final_mask_type),rv('Cushion',d.cushion_material),rv('Headgear',d.headgear_type),rv('Device',d.device_model),rv('Humidification',d.humidification),rv('Heated Tube',d.heated_tube)]),
+    sec('📅 Follow-up (1 wk)',[rv('Mask Changed',d.mask_changed),rv('Avg Usage (hrs/night)',d.avg_usage_hrs),rv('Leak 95th (L/min)',d.mask_leak_95th)]),
+  ].join('');
+}
+
+/* ── Submit ── */
+async function submitForm() {
+  if(!SCRIPT_URL||SCRIPT_URL==='PASTE_YOUR_APPS_SCRIPT_URL_HERE'){alert('⚠️ Apps Script URL not configured. Open config.js.');return;}
+  document.getElementById('submitLabel').style.display='none';
+  document.getElementById('submitSpinner').style.display='';
+  document.getElementById('btnSubmit').disabled=true;
+  try {
+    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(collectData())});
+    const d=collectData();
+    document.getElementById('contentArea').style.display='none';
+    document.getElementById('navBar').style.display='none';
+    document.getElementById('successScreen').classList.add('show');
+    document.getElementById('successMeta').textContent=`Patient ID: ${d.patient_id||'—'} · Submitted: ${new Date().toLocaleString()}`;
+  } catch(err) {
+    document.getElementById('submitLabel').style.display='';
+    document.getElementById('submitSpinner').style.display='none';
+    document.getElementById('btnSubmit').disabled=false;
+    alert('⚠️ Submission failed. Check your network connection.\n\n'+err.message);
+  }
+}
+
+function resetForm() {
+  document.querySelectorAll('input[type=text],input[type=number],input[type=date],textarea').forEach(el=>el.value='');
+  document.querySelectorAll('select').forEach(el=>el.value='');
+  document.querySelectorAll('input[type=radio]').forEach(el=>el.checked=false);
+  currentScreen=0;
+  document.getElementById('contentArea').style.display='';
+  document.getElementById('navBar').style.display='';
+  document.getElementById('successScreen').classList.remove('show');
+  document.querySelectorAll('.screen').forEach((el,i)=>{el.className=i===0?'screen active':'screen';});
+  document.getElementById('submitLabel').style.display='';
+  document.getElementById('submitSpinner').style.display='none';
+  document.getElementById('btnSubmit').disabled=false;
+  updateNav();
+  document.getElementById('contentArea').scrollTop=0;
+  generatePatientId().then(id => {
+    generatedPatientId = id;
+    document.getElementById('patientIdDisplay').textContent = id;
+  });
+}
+
+/* ── Init ── */
+updateNav();
+generatePatientId().then(id => {
+  generatedPatientId = id;
+  document.getElementById('patientIdDisplay').textContent = id;
+});
+</script>
+</body>
+</html>
